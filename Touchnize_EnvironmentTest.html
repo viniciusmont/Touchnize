@@ -1,0 +1,161 @@
+<html>
+	<head>
+		<style>
+			#informations {
+				position: absolute;
+				top:20px;
+				left:820px;
+			}
+		</style>
+		<script type="text/javascript" src="Touchnize.js"></script>
+	</head>
+	<body>
+		<canvas id="canvas1" style="border:1px solid #000000;" width="800" height="550"/></canvas>
+		<div id="informations">
+			<h3>Fingers/Touches Display Informations </h3>
+			Last Gesture <input type="text" id="t" placeholder="recoginized gesture" value=""/><br />
+			<h4>Two Fingers Display </h4>
+			<input type="text" id="dd1" placeholder="Initial Distance" value=""/> |
+			<input type="text" id="dd2" placeholder="Final Distance" value=""/>
+			<h4>One Finger Display </h4>
+			<h5>[- Point X -]</h5>
+			<input type="text" id="px" placeholder="Start Position X" value=""/> |
+			<input type="text" id="px2" placeholder="Now Position X" value=""/>
+			<input type="text" id="ix" placeholder="Interval X" value=""/>
+			<h5>[- Point Y -]</h5>
+			<input type="text" id="py" placeholder="Start Position Y" value=""/> |
+			<input type="text" id="py2"placeholder="Now Position Y" value=""/>
+			<input type="text" id="iy" placeholder="Interval Y" value=""/>
+			<h5>[- Velocities -]</h5>
+			<input type="text" id="vx" placeholder="Velocity of X" value=""/> |
+			<input type="text" id="vy" placeholder="Velocity of Y" value=""/>
+			<input type="text" id="ti" placeholder="Fingers On" value=""/>
+		</div>
+	</body>
+<script>
+var canvas = document.getElementById("canvas1");
+var context = canvas.getContext("2d");
+var fps = 20;
+
+var fingers = [];
+
+function searchFinger(id)
+{	for (var i = 0; i < fingers.length; i++) if (id == fingers[i].id) return(i);
+	return(-1);
+}
+
+canvas.addEventListener("touchstart", function(e)
+{	e.preventDefault();
+	var touches = e.changedTouches;
+	
+	for (var i = 0; i < touches.length; i++) 
+		fingers.push(new Finger(touches[i].identifier, touches[i].clientX, touches[i].clientY,
+								touches[i].clientX, touches[i].clientY, 0, 0,
+								Math.atan2(touches[i].clientX, touches[i].clientY),
+								(new Date()).getTime()));
+
+}, false);
+
+canvas.addEventListener("touchend", function(e)
+{	e.preventDefault();
+	var touches = e.changedTouches;
+			
+	if(isTwoFingersGesture(fingers))
+	{	if (isScrollHorizontal(fingers[0], fingers[1]))
+		{	document.getElementById("t").value = "Scroll Side";
+		}
+		else
+		{	if(isScrollVertical(fingers[0],fingers[1])) 
+			{	document.getElementById("t").value = "Scroll Vertical";
+			}
+			else
+			{	if (isZoom(fingers))
+				{	document.getElementById("t").value = "Zoom In";
+				}
+				else
+				{	if (isPinch(fingers)) 
+					{	document.getElementById("t").value = "Zoom Out";
+					}
+				}
+			}
+		}
+	}
+	else
+	{	for (var i = 0; i < touches.length; i++)
+		{	var p = searchFinger(touches[i].identifier);
+			if (p != -1)
+			{	if(isOneFingerGesture(touches))
+				{	if(isDoubleTap(fingers[p],lastFingerTaped))
+					{	document.getElementById("t").value = "Double Tap";
+					}
+					else
+					{	if (isTap(fingers[p]))
+						{	document.getElementById("t").value = "Tap";
+						}
+						else 
+						{	if(isFlick(fingers[p]))
+							{	document.getElementById("t").value = "flick";
+							}
+							else
+							{	if(isDrag(fingers[p]))
+								{	document.getElementById("t").value = "Drag";
+								}
+								else
+									if (isPress(fingers[p]))
+									{	document.getElementById("t").value = "Press";
+									} 
+							}
+						}
+					}
+				}
+			}
+		}
+	}	
+}, false);
+
+canvas.addEventListener("touchmove", function(e)
+{	e.preventDefault();
+	var touches = e.changedTouches;
+	for (var i = 0; i < touches.length; i++)
+	{	var p = searchFinger(touches[i].identifier);
+		if (p != -1)
+		{	fingers[p].pointX = touches[i].clientX;
+			fingers[p].pointY = touches[i].clientY;
+			fingers[p].intervalX = fingers[p].pointX-fingers[p].pointXi; 
+			fingers[p].intervalY = fingers[p].pointY-fingers[p].pointYi;
+			
+			if (fingers[p].intervalX < 0)
+				fingers[p].intervalX = fingers[p].intervalX*(-1);
+			
+			if (fingers[p].intervalY < 0)
+				fingers[p].intervalY = fingers[p].intervalY*(-1);
+		}
+	}
+	
+	if (touches.length == 2)
+	{	if (fingers.twoFingersInitialDistance == null)
+		{	fingers.twoFingersDistance = fingers.twoFingersInitialDistance = Math.sqrt(Math.pow((fingers[0].pointX-fingers[1].pointX),2)+Math.pow((fingers[0].pointY-fingers[1].pointY),2)); 
+		}
+		else
+			fingers.twoFingersDistance = Math.sqrt(Math.pow((fingers[0].pointX-fingers[1].pointX),2)+
+										Math.pow((fingers[0].pointY-fingers[1].pointY),2));
+		
+	}	
+}, false);
+
+function loop()
+{	context.fillStyle = "white";
+	context.fillRect(0, 0, 800, 550);
+
+	context.fillStyle = "lightblue";
+	for (var i = 0; i < fingers.length; i++) 
+	{	context.beginPath();
+		context.arc(fingers[i].pointX, fingers[i].pointY, 20, 0, 2*Math.PI, true);
+		context.fill();
+		context.stroke();
+	}
+}
+
+var timer1 = setInterval(loop, 1000/fps);
+</script>
+</html>
