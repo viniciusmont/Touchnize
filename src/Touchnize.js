@@ -49,12 +49,12 @@ function isNull(object)
 }
 
 function distanceOfTwoCoordinates(finger1,finger2)
-{	return Math.sqrt(Math.pow((finger1.pointX-finger2.pointX),2)
-		   +Math.pow((finger1.pointY-finger2.pointY),2)); 
+{	return Math.sqrt(Math.pow((finger1.pointX-finger2.pointX),DOUBLE)
+		   +Math.pow((finger1.pointY-finger2.pointY),DOUBLE)); 
 }
 
 function isTwoFingersGesture(fingers){
-	if(fingers.length == 2 && !isNull(fingers.twoFingersInitialDistance))
+	if(fingers.length == HALF && !isNull(fingers.twoFingersInitialDistance))
 	{	return true;
 	}
 	return false;
@@ -128,10 +128,8 @@ function isTap(finger){
 }
 
 function isPress(finger){
-	console.log("OI");
 	if (getIntervalTime(finger) >= PRESS_MIN_MS) 
-	{	console.log("OI2");
-		resetOneFinger(finger.id);
+	{	resetOneFinger(finger.id);
 		return true;
 	}
 	return false;
